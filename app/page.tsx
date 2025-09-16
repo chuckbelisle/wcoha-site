@@ -16,11 +16,29 @@ function Logo({ className = 'h-20 w-auto' }: { className?: string }) {
   return <img src="/wcoha-logo.png" alt="WCOHA logo" className={`${className} object-contain`} />;
 }
 
+function formatPhoneDisplay(raw: string) {
+  // Keep digits; allow optional leading 1 for North America
+  let d = raw.replace(/\D/g, '');
+  if (d.startsWith('1')) d = d.slice(1);          // strip leading country code for display
+  d = d.slice(0, 10);                              // cap to 10 local digits
+
+  const parts = [d.slice(0,3), d.slice(3,6), d.slice(6,10)].filter(Boolean);
+  if (d.length > 6) return `(${parts[0]}) ${parts[1]}-${parts[2]}`;
+  if (d.length > 3)  return `(${parts[0]}) ${parts[1]}`;
+  if (d.length > 0)  return `(${parts[0]}`;
+  return '';
+}
+
+function toE164(raw: string) {
+  // Returns +1XXXXXXXXXX when possible; else returns digits-only fallback
+  let d = raw.replace(/\D/g, '');
+  if (d.startsWith('1')) d = d.slice(1);
+  d = d.slice(0, 10);
+  return d.length === 10 ? `+1${d}` : d; // Canada/US
+}
+
 export default function Page() {
   const [navOpen, setNavOpen] = useState(false);
-
-  // Replace with your Apps Script Web App URL
-  // const SHEET_ENDPOINT = 'https://script.google.com/macros/s/PASTE_YOUR_WEBAPP_ID/exec'; // TODO
 
   const [joinData, setJoinData] = useState({
     fullName: '',
@@ -66,18 +84,22 @@ async function submitJoin(e: React.FormEvent) {
       (joinData.notes || '').trim()
     ].join('\n');
 
+    const phoneDisplay = (joinData.phone || '').trim();
+    const phoneE164 = toE164(phoneDisplay);
+
     const payload = {
       name: joinData.fullName,
       email: joinData.email,
       message: composedMessage,
-      company: joinData.company, // honeypot
-      phone: joinData.phone,
+      company: (joinData as any).company || '',
+      phone: phoneE164,          // Normalized for backend
+      phoneDisplay,              // Pretty version too
       age: joinData.age,
       currentLevel: joinData.currentLevel,
       position: joinData.position,
       goalie: joinData.goalie,
       spareOnly: joinData.spareOnly,
-      notes: joinData.notes,
+      notes: (joinData.notes || '').trim(),
       submittedAt: new Date().toISOString()
     };
 
@@ -230,7 +252,13 @@ async function submitJoin(e: React.FormEvent) {
             </div>
             <div>
               <label className="block text-sm mb-1">Phone</label>
-              <input value={joinData.phone} onChange={e=>updateJoin('phone', e.target.value)} type="tel" className="w-full rounded-xl px-3 py-2 bg-white/10 border border-white/20 text-white"/>
+              <input
+                value={joinData.phone}
+                onChange={e => updateJoin('phone', formatPhoneDisplay(e.target.value))}
+                type="tel"
+                inputMode="tel"
+                className="w-full rounded-xl px-3 py-2 bg-white/10 border border-white/20 text-white"
+              />
             </div>
           </div>
 
