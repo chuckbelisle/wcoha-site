@@ -62,20 +62,31 @@ export default function Page() {
 
 async function submitJoin(e: React.FormEvent) {
   e.preventDefault();
+  if (joinSubmitting) return; // guard
   setJoinError(null);
   setJoinSuccess(null);
 
-  if (!joinData.fullName.trim()) return setJoinError('Please enter your full name.');
-  if (!/^\S+@\S+\.[\w-]+$/.test(joinData.email)) return setJoinError('Please enter a valid email.');
-  const ageNum = Number(joinData.age);
+  // Trimmed copies for validation/payload
+  const fullName = joinData.fullName.trim();
+  const email = joinData.email.trim();
+  const phone = (joinData.phone || '').trim();
+  const ageStr = (joinData.age || '').trim();
+
+  if (!fullName) return setJoinError('Please enter your full name.');
+  if (!/^\S+@\S+\.[\w-]+$/.test(email)) return setJoinError('Please enter a valid email.');
+  const ageNum = Number(ageStr);
   if (!ageNum || ageNum < 35) return setJoinError('This is a 35+ league.');
 
   setJoinSubmitting(true);
+
+  // Abort after 15s to avoid hanging UI
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
   try {
-    // Build a single "message" string for the email, but also send raw fields
     const composedMessage = [
-      `Phone: ${joinData.phone || '—'}`,
-      `Age: ${joinData.age}`,
+      `Phone: ${phone || '—'}`,
+      `Age: ${ageStr}`,
       `Level: ${joinData.currentLevel}`,
       `Position: ${joinData.position}`,
       `Goalie: ${joinData.goalie ? 'Yes' : 'No'}`,
@@ -88,13 +99,13 @@ async function submitJoin(e: React.FormEvent) {
     const phoneE164 = toE164(phoneDisplay);
 
     const payload = {
-      name: joinData.fullName,
-      email: joinData.email,
+      name: fullName,
+      email,
       message: composedMessage,
       company: (joinData as any).company || '',
-      phone: phoneE164,          // Normalized for backend
-      phoneDisplay,              // Pretty version too
-      age: joinData.age,
+      phone: phoneE164,                 // ← normalized for backend/Sheet
+      phoneDisplay,                     // ← optional: keep pretty version too
+      age: ageStr,
       currentLevel: joinData.currentLevel,
       position: joinData.position,
       goalie: joinData.goalie,
@@ -106,27 +117,30 @@ async function submitJoin(e: React.FormEvent) {
     const res = await fetch('/api/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
 
     if (!res.ok) {
-      try {
-        const body = await res.json();
-        throw new Error(body?.error || `HTTP ${res.status}`);
-      } catch {
-        throw new Error(`HTTP ${res.status}`);
-      }
+      // Prefer text so we don’t throw on non-JSON errors
+      const txt = await res.text().catch(() => '');
+      throw new Error(txt || `HTTP ${res.status}`);
     }
 
     setJoinSuccess("Thanks! You're on the list. We'll email you details soon.");
     setJoinData({
       fullName: '', email: '', phone: '', age: '',
       currentLevel: 'Beer League (Rec)', position: 'Forward',
-      goalie: false, spareOnly: false, notes: '', company: ''
+      goalie: false, spareOnly: false, notes: '',
+      company: '' // for honeypot
     });
   } catch (err: any) {
-    setJoinError('Submission failed. Please try again or email wcoha@example.org.');
+    const msg = err?.name === 'AbortError'
+      ? 'Network timeout. Please try again.'
+      : 'Submission failed. Please try again or email wcoha@example.org.';
+    setJoinError(msg);
   } finally {
+    clearTimeout(timeoutId);
     setJoinSubmitting(false);
   }
 }
