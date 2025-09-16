@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { EmailClient } from '@azure/communication-email';
 
-// Optional: small helper for safer string handling
 const s = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 export async function POST(req: NextRequest) {
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const name = s(data.name);
     const email = s(data.email);
     const message = s(data.message);
-    const company = s(data.company);          // honeypot
+    const company = s(data.company);
     const phone = s(data.phone);
     const age = s(data.age);
     const currentLevel = s(data.currentLevel);
@@ -19,21 +19,23 @@ export async function POST(req: NextRequest) {
     const spareOnly = Boolean(data.spareOnly);
     const notes = s(data.notes);
 
-    // Honeypot + validation
-    if (company) return new Response(null, { status: 204 }); // silently drop bots
+    // Honeypot + basic validation
+    if (company) return new Response(null, { status: 204 });
     if (!name || !email || !message) {
       return NextResponse.json({ error: 'Missing name, email, or message' }, { status: 400 });
     }
 
-    // --- 1) Send email via SendGrid ---
-    const sgKey = process.env.SENDGRID_API_KEY;
+    // --- ACS Email (Azure-native) ---
+    const conn = process.env.ACS_EMAIL_CONNECTION_STRING;
+    const from = process.env.CONTACT_FROM || 'no-reply@wcoha.ca'; // must be a verified ACS sender
     const to = process.env.CONTACT_TO;
-    const from = process.env.CONTACT_FROM || 'no-reply@wcoha.ca';
 
-    if (!sgKey || !to) {
-      console.error('Missing SENDGRID_API_KEY or CONTACT_TO');
+    if (!conn || !to) {
+      console.error('Missing ACS_EMAIL_CONNECTION_STRING or CONTACT_TO');
       return NextResponse.json({ error: 'Server not configured' }, { status: 500 });
     }
+
+    const client = new EmailClient(conn);
 
     const composed = [
       `Name: ${name}`,
@@ -51,28 +53,24 @@ export async function POST(req: NextRequest) {
       message
     ].join('\n');
 
-    const emailRes = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${sgKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: to }] }],
-        from: { email: from },
+    // Send email and poll briefly for status
+    const poller = await client.beginSend({
+      senderAddress: from,
+      recipients: { to: [{ address: to }] },
+      content: {
         subject: `WCOHA Contact / Join: ${name}`,
-        content: [{ type: 'text/plain', value: composed }]
-      })
+        plainText: composed
+      }
     });
 
-    if (!emailRes.ok) {
-      const detail = await emailRes.text().catch(() => '');
-      console.error('SendGrid error:', detail);
+    const result = await poller.pollUntilDone(); // waits until Succeeded/Failed
+    if (result.status !== 'Succeeded') {
+      console.warn('ACS email send did not succeed:', result);
       return NextResponse.json({ error: 'Email send failed' }, { status: 502 });
     }
 
-    // --- 2) Append to Google Sheet via Apps Script (server-side) ---
-    const sheetEndpoint = process.env.SHEET_ENDPOINT; // e.g. https://script.google.com/macros/s/XXX/exec
+    // --- Append to Google Sheet (server-side, optional) ---
+    const sheetEndpoint = process.env.SHEET_ENDPOINT;
     if (sheetEndpoint) {
       const rowPayload = {
         submittedAt: new Date().toISOString(),
@@ -88,7 +86,7 @@ export async function POST(req: NextRequest) {
       if (!sheetRes.ok) {
         const txt = await sheetRes.text().catch(() => '');
         console.warn('Sheets append failed:', txt);
-        // We don’t fail the user if Sheets hiccups; flip to strict if you prefer.
+        // Keep success for the user; flip to a 502 if you want this to be mandatory.
       }
     }
 
