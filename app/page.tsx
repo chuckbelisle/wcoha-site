@@ -334,7 +334,7 @@ async function submitJoin(e: React.FormEvent) {
       {/* Standings placeholder */}
       <section id="standings" className="max-w-6xl mx-auto px-4 py-10">
         <h2 className="text-2xl font-bold">Standings</h2>
-        <p className="text-white/70 mt-2 text-sm">Hook this table up to your data source (Google Sheet, LeagueTool, or custom DB).</p>
+        <p className="text-white/70 mt-2 text-sm">To be updated with real data.</p>
         <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10">
           <table className="min-w-full text-sm">
             <thead className="bg-white/5">
