@@ -20,7 +20,7 @@ export default function Page() {
   const [navOpen, setNavOpen] = useState(false);
 
   // Replace with your Apps Script Web App URL
-  const SHEET_ENDPOINT = 'https://script.google.com/macros/s/PASTE_YOUR_WEBAPP_ID/exec'; // TODO
+  // const SHEET_ENDPOINT = 'https://script.google.com/macros/s/PASTE_YOUR_WEBAPP_ID/exec'; // TODO
 
   const [joinData, setJoinData] = useState({
     fullName: '',
@@ -32,6 +32,7 @@ export default function Page() {
     goalie: false,
     spareOnly: false,
     notes: '',
+    company: ''   // <-- honeypot (leave empty)
   });
   const [joinSubmitting, setJoinSubmitting] = useState(false);
   const [joinSuccess, setJoinSuccess] = useState<string | null>(null);
@@ -41,32 +42,72 @@ export default function Page() {
     setJoinData(prev => ({ ...prev, [key]: value }));
   }
 
-  async function submitJoin(e: React.FormEvent) {
-    e.preventDefault();
-    setJoinError(null);
-    setJoinSuccess(null);
+async function submitJoin(e: React.FormEvent) {
+  e.preventDefault();
+  setJoinError(null);
+  setJoinSuccess(null);
 
-    if (!joinData.fullName.trim()) return setJoinError('Please enter your full name.');
-    if (!/^\S+@\S+\.[\w-]+$/.test(joinData.email)) return setJoinError('Please enter a valid email.');
-    const ageNum = Number(joinData.age);
-    if (!ageNum || ageNum < 35) return setJoinError('This is a 35+ league.');
+  if (!joinData.fullName.trim()) return setJoinError('Please enter your full name.');
+  if (!/^\S+@\S+\.[\w-]+$/.test(joinData.email)) return setJoinError('Please enter a valid email.');
+  const ageNum = Number(joinData.age);
+  if (!ageNum || ageNum < 35) return setJoinError('This is a 35+ league.');
 
-    setJoinSubmitting(true);
-    try {
-      const res = await fetch(SHEET_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...joinData, submittedAt: new Date().toISOString() }),
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      setJoinSuccess("Thanks! You're on the list. We’ll email you details and your BenhApp invite.");
-      setJoinData({ fullName: '', email: '', phone: '', age: '', currentLevel: 'Beer League (Rec)', position: 'Forward', goalie: false, spareOnly: false, notes: '' });
-    } catch (err) {
-      setJoinError('Submission failed. Please try again or email wcoha@example.org.');
-    } finally {
-      setJoinSubmitting(false);
+  setJoinSubmitting(true);
+  try {
+    // Build a single "message" string for the email, but also send raw fields
+    const composedMessage = [
+      `Phone: ${joinData.phone || '—'}`,
+      `Age: ${joinData.age}`,
+      `Level: ${joinData.currentLevel}`,
+      `Position: ${joinData.position}`,
+      `Goalie: ${joinData.goalie ? 'Yes' : 'No'}`,
+      `Spare-only: ${joinData.spareOnly ? 'Yes' : 'No'}`,
+      '',
+      (joinData.notes || '').trim()
+    ].join('\n');
+
+    const payload = {
+      name: joinData.fullName,
+      email: joinData.email,
+      message: composedMessage,
+      company: joinData.company, // honeypot
+      phone: joinData.phone,
+      age: joinData.age,
+      currentLevel: joinData.currentLevel,
+      position: joinData.position,
+      goalie: joinData.goalie,
+      spareOnly: joinData.spareOnly,
+      notes: joinData.notes,
+      submittedAt: new Date().toISOString()
+    };
+
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      try {
+        const body = await res.json();
+        throw new Error(body?.error || `HTTP ${res.status}`);
+      } catch {
+        throw new Error(`HTTP ${res.status}`);
+      }
     }
+
+    setJoinSuccess("Thanks! You're on the list. We'll email you details soon.");
+    setJoinData({
+      fullName: '', email: '', phone: '', age: '',
+      currentLevel: 'Beer League (Rec)', position: 'Forward',
+      goalie: false, spareOnly: false, notes: '', company: ''
+    });
+  } catch (err: any) {
+    setJoinError('Submission failed. Please try again or email wcoha@example.org.');
+  } finally {
+    setJoinSubmitting(false);
   }
+}
 
   const news = [
     { id: 1, title: '2025–26 Registration Now Open', blurb: 'Secure your spot for the upcoming season. Early-bird closes Sept 30.', href: '#' },
@@ -236,6 +277,15 @@ export default function Page() {
           </Button>
 
           <div className="text-xs text-white/60">After approval you’ll receive your BenhApp invite link by email. We never sell your data.</div>
+        <input
+          type="text"
+          name="company"
+          value={joinData.company}
+          onChange={e => updateJoin('company', e.target.value)}
+          style={{ display: 'none' }}
+          tabIndex={-1}
+          autoComplete="off"
+        />
         </form>
       </section>
 
