@@ -5,13 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Newspaper, Trophy, ExternalLink, MapPin } from 'lucide-react';
 
-/**
- * LeagueHomeV2 – Next.js App Router page
- * - Uses actual logo (public/wcoha-logo.png)
- * - Join form includes Player's Age + Current Level
- * - Google Sheets submission via Apps Script Web App endpoint
- */
-
 function Logo({ className = 'h-20 w-auto' }: { className?: string }) {
   return <img src="/wcoha-logo.png" alt="WCOHA logo" className={`${className} object-contain`} />;
 }
@@ -50,7 +43,7 @@ export default function Page() {
     goalie: false,
     spareOnly: false,
     notes: '',
-    company: ''   // <-- honeypot (leave empty)
+    company: ''   // honeypot (leave empty)
   });
   const [joinSubmitting, setJoinSubmitting] = useState(false);
   const [joinSuccess, setJoinSuccess] = useState<string | null>(null);
@@ -103,8 +96,8 @@ async function submitJoin(e: React.FormEvent) {
       email,
       message: composedMessage,
       company: (joinData as any).company || '',
-      phone: phoneE164,                 // ← normalized for backend/Sheet
-      phoneDisplay,                     // ← optional: keep pretty version too
+      phone: phoneE164,                 // Backend/Sheet
+      phoneDisplay,                     // Pretty version too
       age: ageStr,
       currentLevel: joinData.currentLevel,
       position: joinData.position,
@@ -166,8 +159,7 @@ async function submitJoin(e: React.FormEvent) {
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <a className="hover:text-[#e63946] transition" href="#join">Join the League</a>
             <a className="hover:text-[#e63946] transition" href="#standings">Standings</a>
-            <a className="hover:text-[#e63946] transition" href="#teams">Teams</a>
-            {/*<a className="hover:text-[#e63946] transition" href="#registration">Registration</a>*/}
+            <a className="hover:text-[#e63946] transition" href="/sponsors">Sponsors</a>
             <a className="hover:text-[#e63946] transition" href="#about">About</a>
           </nav>
           <button className="md:hidden inline-flex items-center gap-2 rounded-2xl border border-white/10 px-3 py-2 text-sm hover:bg-white/5" onClick={() => setNavOpen(!navOpen)}>
@@ -181,7 +173,6 @@ async function submitJoin(e: React.FormEvent) {
                 ['Join', '#join'],
                 ['Standings', '#standings'],
                 ['Teams', '#teams'],
-                /*['Registration', '#registration'],*/
                 ['Spares', '#spares'],
                 ['About', '#about'],
               ].map(([label, href]) => (
@@ -206,7 +197,6 @@ async function submitJoin(e: React.FormEvent) {
             </p>
             <div className="mt-6 flex gap-3">
               <Button className="rounded-2xl px-5 py-5 text-base bg-[#e63946] hover:bg-[#c92c39]"><a href="#join">Join the League</a></Button>
-              {/*<Button className="rounded-2xl px-5 py-5 text-base bg-white/10 hover:bg-white/15"><a href="#join">Join the League</a></Button>*/}
             </div>
             <div className="mt-6 flex items-center gap-4 text-xs text-white/70">
               <div className="flex items-center gap-2"><Trophy size={16}/> Recreational tiers</div>
@@ -385,7 +375,7 @@ async function submitJoin(e: React.FormEvent) {
         <div className="max-w-6xl mx-auto px-4 py-8">
           <h2 className="text-center font-semibold tracking-wide text-white/80 text-sm">League Sponsors</h2>
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-            {['Carp Local Market','Village Auto','Riverbend Diner','Kinburn Hardware'].map(s => (
+            {['Abbey Landscaping image','WCASC Sports Club','BIG Insurance','Edgewood Links'].map(s => (
               <div key={s} className="rounded-xl border border-white/10 p-4 text-center text-white/60">{s}</div>
             ))}
           </div>
