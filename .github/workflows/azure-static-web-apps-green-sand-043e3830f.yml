@@ -27,13 +27,13 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+
       - name: Get Id Token
         uses: actions/github-script@v6
         id: idtoken
         with:
           script: |
-            const core = require('@actions/core');
-            return await core.getIDToken();
+            return await core.getIDToken()
           result-encoding: string
 
       - name: Build and Deploy
@@ -50,6 +50,14 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
+      - name: Get Id Token
+        uses: actions/github-script@v6
+        id: idtoken
+        with:
+          script: |
+            return await core.getIDToken()
+          result-encoding: string
+
       - name: Close Pull Request
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -57,3 +65,4 @@ jobs:
           action: "close"
           app_location: "/"
           api_location: ""
+          github_id_token: ${{ steps.idtoken.outputs.result }}
