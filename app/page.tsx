@@ -261,7 +261,7 @@ export default function Page() {
                 ['Teams', '#teams'],
                 ['Spares', '#spares'],
                 ['About', '#about'],
-                ['Instagram', 'https://instagram.com/wcoha'], // new
+                ['Instagram', 'https://instagram.com/wcoha_league'], // new
               ].map(([label, href]) => (
                 <a
                   key={label}
