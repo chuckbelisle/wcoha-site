@@ -1,14 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Newspaper, Trophy, ExternalLink, MapPin } from 'lucide-react';
 
 
-/* =========================
-   Helpers (placed OUTSIDE JSX)
-   ========================= */
 function toGCalDate(isoLike: string): string {
   // Accepts "2025-10-09T19:00:00-04:00" or "2025-10-09T23:00:00Z" and converts to UTC YYYYMMDDTHHMMSSZ
   const d = new Date(isoLike);
@@ -54,8 +51,6 @@ const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
   </svg>
 );
-
-/* ========================= */
 
 function Logo({ className = 'h-20 w-auto' }: { className?: string }) {
   return <img src="/wcoha-logo.png" alt="WCOHA logo" className={`${className} object-contain`} />;
@@ -182,7 +177,7 @@ export default function Page() {
     } catch (err: any) {
       const msg = err?.name === 'AbortError'
         ? 'Network timeout. Please try again.'
-        : 'Submission failed. Please try again or email wcoha@example.org.';
+        : 'Submission failed. Please try again or email web@wcoha.ca.';
       setJoinError(msg);
     } finally {
       clearTimeout(timeoutId);
@@ -226,7 +221,26 @@ export default function Page() {
       blurb: 'Follow the league & tag us in your posts.',
       href: 'https://www.instagram.com/wcoha_league/',
     },
-  ];
+  ]
+  // Standings hook to sheets
+  const [standings, setStandings] = useState<{ elford: any[]; stevenard: any[] } | null>(null);
+  const [stErr, setStErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/standings', { cache: 'no-store' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'Failed');
+        if (!cancelled) setStandings(data);
+      } catch (e) {
+        if (!cancelled) setStErr('Unable to load standings right now.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // ---------------------------------------------------
 
   return (
@@ -442,65 +456,62 @@ export default function Page() {
 
       {/* Standings */}
       <section id="standings" className="max-w-6xl mx-auto px-4 py-10">
-        <h2 className="text-2xl font-bold">Elford division Standings</h2>
-        <p className="text-white/70 mt-2 text-sm">To be updated with real data.</p>
+      <h2 className="text-2xl font-bold">Elford division Standings</h2>
+      {stErr && <p className="text-sm text-red-400 mt-2">{stErr}</p>}
+      {!standings ? (
+        <p className="text-white/70 mt-2 text-sm">Loading…</p>
+      ) : (
         <div style={{ marginBottom: '20px' }} className="mt-4 overflow-x-auto rounded-2xl border border-white/10">
           <table className="min-w-full text-sm">
             <thead className="bg-white/5">
-              <tr>
-                {['Team', 'GP', 'W', 'L', 'T', 'PTS', 'GF', 'GA', 'DIFF'].map(h => (
-                  <th key={h} className="text-left px-4 py-2">{h}</th>
-                ))}
-              </tr>
+              <tr>{['Team','GP','W','L','T','PTS','GF','GA','DIFF'].map(h => <th key={h} className="text-left px-4 py-2">{h}</th>)}</tr>
             </thead>
             <tbody>
-              {[
-                ["Alice's Cafe", 6, 5, 1, 0, 10, 26, 14, +12],
-                ['Cheshire Cat', 6, 4, 2, 0, 8, 21, 18, +3],
-                ['Jodouin', 6, 3, 3, 0, 6, 17, 17, 0],
-                ['Nelson Water', 6, 3, 3, 0, 6, 17, 17, 0],
-              ].map((row, i) => (
+              {standings.elford.map((r, i) => (
                 <tr key={i} className="odd:bg-white/[0.03]">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-4 py-2">{cell}</td>
-                  ))}
+                  <td className="px-4 py-2">{r.team}</td>
+                  <td className="px-4 py-2">{r.gp}</td>
+                  <td className="px-4 py-2">{r.w}</td>
+                  <td className="px-4 py-2">{r.l}</td>
+                  <td className="px-4 py-2">{r.t}</td>
+                  <td className="px-4 py-2">{r.pts}</td>
+                  <td className="px-4 py-2">{r.gf}</td>
+                  <td className="px-4 py-2">{r.ga}</td>
+                  <td className="px-4 py-2">{r.diff}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <h2 className="text-2xl font-bold">Stevenard division Standings</h2>
-        <p className="text-white/70 mt-2 text-sm">To be updated with real data.</p>
+      )}
+      <h2 className="text-2xl font-bold">Stevenard division Standings</h2>
+      {!standings ? (
+        <p className="text-white/70 mt-2 text-sm">Loading…</p>
+      ) : (
         <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10">
           <table className="min-w-full text-sm">
             <thead className="bg-white/5">
-              <tr>
-                {['Team', 'GP', 'W', 'L', 'T', 'PTS', 'GF', 'GA', 'DIFF'].map(h => (
-                  <th key={h} className="text-left px-4 py-2">{h}</th>
-                ))}
-              </tr>
+              <tr>{['Team','GP','W','L','T','PTS','GF','GA','DIFF'].map(h => <th key={h} className="text-left px-4 py-2">{h}</th>)}</tr>
             </thead>
             <tbody>
-              {[
-                ['Abbey Landscaping', 6, 4, 2, 0, 8, 21, 18, +3],
-                ['Big Insurance', 6, 3, 3, 0, 6, 17, 17, 0],
-                ['Edgewood Links', 6, 5, 1, 0, 10, 26, 14, +12],
-                ['Kanata Academy', 6, 3, 3, 0, 6, 17, 17, 0],
-                ['Tin Can', 6, 3, 3, 0, 6, 17, 17, 0],
-                ['Shouldice Mechanical', 6, 3, 3, 0, 6, 17, 17, 0],
-                ['Sports Club', 6, 4, 2, 0, 8, 21, 18, +3],
-                ['West Carleton Outdoors', 6, 5, 1, 0, 10, 26, 14, +12],
-              ].map((row, i) => (
+              {standings.stevenard.map((r, i) => (
                 <tr key={i} className="odd:bg-white/[0.03]">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-4 py-2">{cell}</td>
-                  ))}
+                  <td className="px-4 py-2">{r.team}</td>
+                  <td className="px-4 py-2">{r.gp}</td>
+                  <td className="px-4 py-2">{r.w}</td>
+                  <td className="px-4 py-2">{r.l}</td>
+                  <td className="px-4 py-2">{r.t}</td>
+                  <td className="px-4 py-2">{r.pts}</td>
+                  <td className="px-4 py-2">{r.gf}</td>
+                  <td className="px-4 py-2">{r.ga}</td>
+                  <td className="px-4 py-2">{r.diff}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
+      )}
+    </section>
 
       {/* Footer */}
       <footer id="about" className="border-t border-white/10">
