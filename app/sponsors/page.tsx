@@ -18,7 +18,10 @@ function Header() {
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm">
           <a className="hover:text-[#e63946] transition" href="/">Home</a>
+          <a className="hover:text-[#e63946] transition" href="/#join">Join the League</a>
+          <a className="hover:text-[#e63946] transition" href="/#standings">Standings</a>
           <a className="hover:text-[#e63946] transition" href="/sponsors">Sponsors</a>
+          <a className="hover:text-[#e63946] transition" href="/#about">About</a>
         </nav>
       </div>
     </header>
@@ -31,7 +34,7 @@ export default function SponsorsPage() {
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-10">
         <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mb-8">League Sponsors</h1>
-        <p className="text-white/70 mb-10 text-sm max-w-2xl">We’re grateful for our community sponsors. Click any sponsor to see their details; use the external link to visit their official website.</p>
+        <p className="text-white/70 mb-10 text-sm max-w-2xl">We’re grateful for our community sponsors.</p>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {sponsors.map((s: Sponsor) => (
