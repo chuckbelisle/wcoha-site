@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import sponsors from '@/data/sponsors.json';
+import { Users, Newspaper, Trophy, ExternalLink, MapPin } from 'lucide-react';
 
 type Sponsor = typeof sponsors[number];
 
@@ -18,11 +19,18 @@ function Header() {
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm">
           <a className="hover:text-[#e63946] transition" href="/">Home</a>
+          <a className="hover:text-[#e63946] transition" href="/#join">Join the League</a>
+          <a className="hover:text-[#e63946] transition" href="/#standings">Standings</a>
           <a className="hover:text-[#e63946] transition" href="/sponsors">Sponsors</a>
+          <a className="hover:text-[#e63946] transition" href="/#about">About</a>
         </nav>
       </div>
     </header>
   );
+}
+
+function Logo({ className = 'h-20 w-auto' }: { className?: string }) {
+  return <img src="/wcoha-logo.png" alt="WCOHA logo" className={`${className} object-contain`} />;
 }
 
 export default function SponsorsPage() {
@@ -31,7 +39,7 @@ export default function SponsorsPage() {
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-10">
         <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mb-8">League Sponsors</h1>
-        <p className="text-white/70 mb-10 text-sm max-w-2xl">We’re grateful for our community sponsors. Click any sponsor to see their details; use the external link to visit their official website.</p>
+        <p className="text-white/70 mb-10 text-sm max-w-2xl">We’re grateful for our community sponsors.</p>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {sponsors.map((s: Sponsor) => (
@@ -52,6 +60,43 @@ export default function SponsorsPage() {
           ))}
         </div>
       </div>
+
+      {/* Footer */}
+      <footer id="about" className="border-t border-white/10">
+        <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-white/70">
+          <div>
+            <div className="flex items-center gap-3">
+              <Logo className="h-8 w-auto" />
+              <span className="font-semibold text-white">WCOHA</span>
+            </div>
+            <p className="mt-2">West Carleton Oldtimers Hockey Association. Community-run 35+ league since 1989.</p>
+          </div>
+          <div>
+            <div className="font-semibold text-white">Quick Links</div>
+            <ul className="mt-2 space-y-1">
+              <li><a href="#join" className="hover:text-white">Join the League</a></li>
+              <li><a href="#spares" className="hover:text-white">Spares & Subs</a></li>
+              <li><a href="#standings" className="hover:text-white">Standings</a></li>
+              <li><a href="#news" className="hover:text-white">News</a></li>
+            </ul>
+          </div>
+          <div>
+            <div className="font-semibold text-white">Contact</div>
+            <ul className="mt-2 space-y-1"></ul>
+            <li>
+              <a
+                href="https://instagram.com/wcoha_league"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white inline-flex items-center gap-1"
+              >
+                Instagram <ExternalLink size={14} />
+              </a>
+            </li>
+        </div>
+        </div>
+        <div className="text-center text-xs text-white/50 pb-6">© {new Date().getFullYear()} WCOHA. All rights reserved.</div><div className="text-center text-xs text-white/50 pb-6"> Site designed by PL Cloud Solutions inc</div>
+      </footer>
     </main>
   );
 }
