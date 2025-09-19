@@ -222,9 +222,9 @@ export default function Page() {
     },
     {
       id: 3,
-      title: 'Sponsor Spotlight: Carp Local Market',
-      blurb: 'Thanks to our community partners for supporting the league.',
-      href: '#',
+      title: 'We have an Instagram account!!',
+      blurb: 'Follow the league & tag us in your posts.',
+      href: 'https://www.instagram.com/wcoha_league/',
     },
   ];
   // ---------------------------------------------------
@@ -536,7 +536,7 @@ export default function Page() {
             </li>
         </div>
         </div>
-        <div className="text-center text-xs text-white/50 pb-6">© {new Date().getFullYear()} WCOHA. All rights reserved.</div><div className="text-center text-xs text-white/50 pb-6"> Site designed by PL Cloud Solutions.ca inc</div>
+        <div className="text-center text-xs text-white/50 pb-6">© {new Date().getFullYear()} WCOHA. All rights reserved.</div><div className="text-center text-xs text-white/50 pb-6"> Site designed by PL Cloud Solutions inc</div>
       </footer>
     </div>
   );
