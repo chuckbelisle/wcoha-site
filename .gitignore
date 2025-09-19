@@ -1,3 +1,14 @@
 node_modules
 .DS_Store
 .next
+.next/app-build-manifest.json
+.next/build-manifest.json
+.next/server/app-paths-manifest.json
+.next/server/pages-manifest.json
+.next/server/server-reference-manifest.json
+.next/server/webpack-runtime.js
+.next/server/app/sponsors/page.js
+.next/types/app/layout.ts
+.next/types/app/page.ts
+.next/types/app/sponsors/page.ts
+.next/types/app/sponsors/\[slug]/page.ts

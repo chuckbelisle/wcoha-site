@@ -1,4 +1,4 @@
-// File: /Users/chuck/Documents/wcoha/new website/wcoha-nextjs-starter/app/sponsors/[slug]/page.tsx
+// File: /Users/chuck/Documents/wcoha/wcoha-site/app/sponsors/[slug]/page.tsx
 import * as entry from '../../../../../app/sponsors/[slug]/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
