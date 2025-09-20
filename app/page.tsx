@@ -53,7 +53,7 @@ const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 function Logo({ className = 'h-20 w-auto' }: { className?: string }) {
-  return <img src="/wcoha-logo.png" alt="WCOHA logo" className={`${className} object-contain`} />;
+  return <img src="/wcoha-logo-v2.png" alt="WCOHA logo" className={`${className} object-contain`} />;
 }
 
 function formatPhoneDisplay(raw: string) {
@@ -245,53 +245,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-[#0f1722] text-white">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-[#0f1722]/60 bg-[#0f1722]/90 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo className="h-10 w-auto" />
-            <div className="leading-tight">
-              <div className="text-lg font-bold tracking-tight">West Carleton Oldtimers Hockey</div>
-              <div className="text-xs text-white/70">35+ Men’s ice hockey League • Since 1989</div>
-            </div>
-          </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            <a className="hover:text-[#e63946] transition" href="#join">Join the League</a>
-            <a className="hover:text-[#e63946] transition" href="#standings">Standings</a>
-            <a className="hover:text-[#e63946] transition" href="/sponsors">Sponsors</a>
-            <a className="hover:text-[#e63946] transition" href="#about">About</a>
-            <a href="https://instagram.com/wcoha_league" target="_blank" rel="noopener noreferrer" className="hover:text-[#e63946] transition inline-flex items-center gap-1"><InstagramIcon /> Instagram</a>
-          </nav>
-          <button className="md:hidden inline-flex items-center gap-2 rounded-2xl border border-white/10 px-3 py-2 text-sm hover:bg-white/5" onClick={() => setNavOpen(!navOpen)}>
-            Menu
-          </button>
-        </div>
-        {navOpen && (
-          <div className="md:hidden border-t border-white/10">
-            <div className="max-w-6xl mx-auto px-4 py-3 grid grid-cols-2 gap-3 text-sm">
-              {[
-                ['Join', '#join'],
-                ['Standings', '#standings'],
-                ['Teams', '#teams'],
-                ['Spares', '#spares'],
-                ['About', '#about'],
-                ['Instagram', 'https://instagram.com/wcoha_league'], // new
-              ].map(([label, href]) => (
-                <a
-                  key={label}
-                  href={href}
-                  target={label === 'Instagram' ? '_blank' : undefined}
-                  rel={label === 'Instagram' ? 'noopener noreferrer' : undefined}
-                  className="rounded-xl bg-white/5 px-3 py-2 hover:bg-white/10 inline-flex items-center gap-1"
-                >
-                  {label === 'Instagram' && <InstagramIcon />}
-                  {label}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-      </header>
 
       {/* Hero */}
       <section className="bg-gradient-to-b from-[#1d3557] to-[#152238]">
@@ -512,43 +465,6 @@ export default function Page() {
         </div>
       )}
     </section>
-
-      {/* Footer */}
-      <footer id="about" className="border-t border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-6 text-sm text-white/70">
-          <div>
-            <div className="flex items-center gap-3">
-              <Logo className="h-8 w-auto" />
-              <span className="font-semibold text-white">WCOHA</span>
-            </div>
-            <p className="mt-2">West Carleton Oldtimers Hockey Association. Community-run 35+ league since 1989.</p>
-          </div>
-          <div>
-            <div className="font-semibold text-white">Quick Links</div>
-            <ul className="mt-2 space-y-1">
-              <li><a href="#join" className="hover:text-white">Join the League</a></li>
-              <li><a href="#spares" className="hover:text-white">Spares & Subs</a></li>
-              <li><a href="#standings" className="hover:text-white">Standings</a></li>
-              <li><a href="#news" className="hover:text-white">News</a></li>
-            </ul>
-          </div>
-          <div>
-            <div className="font-semibold text-white">Contact</div>
-            <ul className="mt-2 space-y-1"></ul>
-            <li>
-              <a
-                href="https://instagram.com/wcoha_league"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white inline-flex items-center gap-1"
-              >
-                Instagram <ExternalLink size={14} />
-              </a>
-            </li>
-        </div>
-        </div>
-        <div className="text-center text-xs text-white/50 pb-6">© {new Date().getFullYear()} WCOHA. All rights reserved.</div><div className="text-center text-xs text-white/50 pb-6"> Site designed by PL Cloud Solutions inc</div>
-      </footer>
     </div>
   );
 }

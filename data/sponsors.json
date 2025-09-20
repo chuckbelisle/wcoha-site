@@ -18,7 +18,7 @@
   {
     "name": "Abbey Landscaping",
     "slug": "abbey-landscaping",
-    "website": null,
+    "website": "https://abbeylandscaping.ca/",
     "remoteUrl": "",
     "localSrc": "/sponsors/abbey-landscaping.png",
     "blurb": "Residential and commercial landscaping with an eye for four-season curb appeal."
@@ -34,7 +34,7 @@
   {
     "name": "Alice's Village Cafe",
     "slug": "alices-village-cafe",
-    "website": null,
+    "website": "http://www.alicesvillagecafe.com/",
     "remoteUrl": "",
     "localSrc": "/sponsors/alices-village-cafe.png",
     "blurb": "A Carp staple—great coffee, baked goods, and post-game bites in the heart of the village."
@@ -42,7 +42,7 @@
   {
     "name": "West Carleton Outdoors (WCO)",
     "slug": "west-carleton-outdoors",
-    "website": null,
+    "website": "https://www.westcarletonoutdoors.com/",
     "remoteUrl": "",
     "localSrc": "/sponsors/wco-outdoors.png",
     "blurb": "Outfitting your next adventure across West Carleton: gear, guidance, and local know-how."
@@ -58,7 +58,7 @@
   {
     "name": "Edgewood Links",
     "slug": "edgewood-links",
-    "website": null,
+    "website": "https://edgewoodlinks.com/",
     "remoteUrl": "",
     "localSrc": "/sponsors/edgewood-links.png",
     "blurb": "A scenic local course—great for team scrambles and sponsor days."
@@ -66,7 +66,7 @@
   {
     "name": "Cheshire Cat Pub",
     "slug": "cheshire-cat-pub",
-    "website": null,
+    "website": "http://www.cheshirecatpub.com/",
     "remoteUrl": "",
     "localSrc": "/sponsors/cheshire-cat-pub.png",
     "blurb": "Beloved heritage pub in Carp—classic comfort food and after-game pints."
@@ -74,7 +74,7 @@
   {
     "name": "Billyard Insurance Group (Kanata)",
     "slug": "big-kanata",
-    "website": null,
+    "website": "https://www.thebig.ca/kanata",
     "remoteUrl": "",
     "localSrc": "/sponsors/big-kanata.png",
     "blurb": "Insurance solutions for home, auto, business and more—serving the Kanata area."
@@ -82,7 +82,7 @@
   {
     "name": "Jodouin Mine Ventilation Ltd.",
     "slug": "jodouin-mine-ventilation",
-    "website": null,
+    "website": "https://www.linkedin.com/company/jodouin-mine-ventilation-ltd/?originalSubdomain=ca",
     "remoteUrl": "",
     "localSrc": "/sponsors/jodouin-mine-ventilation.png",
     "blurb": "Engineering and products supporting safe, efficient underground operations."
@@ -90,7 +90,7 @@
     {
     "name": "Tin Can Painting",
     "slug": "tin-can-painting",
-    "website": null,
+    "website": "https://tincanpainting.com/",
     "remoteUrl": "",
     "localSrc": "/sponsors/tin-can-painting.png",
     "blurb": "We provide our services for large residential and commercial painting projects to small interior contracts."
