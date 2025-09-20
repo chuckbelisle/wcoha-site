@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmailClient } from '@azure/communication-email';
 
-// Optional direct Sheets append if you’ve set up lib/sheets.ts and env vars
+export const runtime = 'nodejs';
+
 let getSheetsClient: (() => any) | null = null;
 try {
-  // soft import to avoid bundling error if lib doesn’t exist yet
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   getSheetsClient = require('@/lib/sheets').getSheetsClient;
-} catch { /* noop */ }
+} catch { /* lib/sheets may not exist locally; fine */ }
 
 const s = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 const yesNo = (b: any) => (b ? 'Yes' : 'No');
-
-function limit(str: string, max = 2000) {
-  return (str || '').slice(0, max);
-}
+const limit = (str: string, max = 2000) => (str || '').slice(0, max);
 
 async function postWithTimeout(url: string, body: any, ms = 8000): Promise<Response> {
   const ctrl = new AbortController();
@@ -41,6 +37,7 @@ export async function POST(req: NextRequest) {
     const company = s(data.company); // honeypot
 
     const phone = limit(s(data.phone), 32);
+    const phoneDisplay = limit(s(data.phoneDisplay), 32);
     const age = limit(s(data.age), 8);
     const currentLevel = limit(s(data.currentLevel), 128);
     const position = limit(s(data.position), 64);
@@ -54,9 +51,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing name, email, or message' }, { status: 400 });
     }
 
-    // --- Send email via Azure Communication Services ---
+    // --- Email via ACS ---
     const conn = process.env.ACS_EMAIL_CONNECTION_STRING;
-    const from = process.env.CONTACT_FROM || 'no-reply@wcoha.ca'; // must be verified in ACS
+    const from = process.env.CONTACT_FROM || 'no-reply@wcoha.ca';
     const to = process.env.CONTACT_TO;
 
     if (!conn || !to) {
@@ -64,12 +61,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Server not configured' }, { status: 500 });
     }
 
-    const client = new EmailClient(conn);
-
     const composed = [
       `Name: ${name}`,
       `Email: ${email}`,
-      `Phone: ${phone || '—'}`,
+      `Phone: ${phone || '—'} (${phoneDisplay || '—'})`,
       `Age: ${age || '—'}`,
       `Level: ${currentLevel || '—'}`,
       `Position: ${position || '—'}`,
@@ -82,85 +77,75 @@ export async function POST(req: NextRequest) {
       message
     ].join('\n');
 
-const poller = await client.beginSend({
-  senderAddress: from,
-  recipients: { to: [{ address: to }] },
-  content: { subject: `WCOHA Contact / Join: ${name}`, plainText: composed },
-  replyTo: email ? [{ address: email }] : undefined,
-});
+    const client = new EmailClient(conn);
+    const poller = await client.beginSend({
+      senderAddress: from,
+      recipients: { to: [{ address: to }] },
+      content: { subject: `WCOHA Contact / Join: ${name}`, plainText: composed },
+      replyTo: email ? [{ address: email }] : undefined,
+    });
+    const result = await poller.pollUntilDone(); // default polling; no updateIntervalInMs
 
-// optional timeout via AbortController
-const ac = new AbortController();
-const timeout = setTimeout(() => ac.abort(), 20000);
+    if (result.status !== 'Succeeded') {
+      console.warn('ACS email send did not succeed:', result);
+      // Continue to Sheets append; or return 502 if you want to hard-fail
+    }
 
-let result;
-try {
-  result = await poller.pollUntilDone({ abortSignal: ac.signal as any });
-} finally {
-  clearTimeout(timeout);
-}
-
-if (result.status !== 'Succeeded') {
-  console.warn('ACS email send did not succeed:', result);
-}
-
-    // --- Append to Google Sheet ---
-    const useSheetsApi = process.env.USE_GOOGLE_SHEETS_API === 'true' && typeof getSheetsClient === 'function';
+    // --- Append to Sheets ---
     const submittedAt = new Date().toISOString();
+    const useSheetsApi = process.env.USE_GOOGLE_SHEETS_API === 'true' && typeof getSheetsClient === 'function';
 
     if (useSheetsApi) {
-      try {
-        const sheets = getSheetsClient!();
-        const spreadsheetId = process.env.SHEETS_JOIN_SPREADSHEET_ID!;
-        const sheet = process.env.SHEETS_JOIN_SHEET || 'JoinRequests';
+      const spreadsheetId = process.env.SHEETS_JOIN_SPREADSHEET_ID;
+      const sheet = process.env.SHEETS_JOIN_SHEET || 'JoinRequests';
+      const emailSa = process.env.GOOGLE_SA_EMAIL;
+      const keySa = process.env.GOOGLE_SA_KEY;
 
-        const rows = [[
-          submittedAt,
-          name, email, phone,
-          (data.phoneDisplay ?? ''), // optional pretty phone if it passes
-          age, currentLevel, position,
-          yesNo(goalie), yesNo(spareOnly),
-          notes
-        ]];
-
-        await sheets.spreadsheets.values.append({
-          spreadsheetId,
-          range: `${sheet}!A1`,
-          valueInputOption: 'USER_ENTERED',
-          requestBody: { values: rows },
-        });
-      } catch (e) {
-        console.warn('Sheets API append failed:', e);
-        // don’t fail the request for the user; log only
+      if (!spreadsheetId || !emailSa || !keySa) {
+        console.warn('Join append skipped: missing env for Sheets API');
+      } else {
+        try {
+          const sheets = getSheetsClient!();
+          const rows = [[
+            submittedAt,
+            name, email, phone, phoneDisplay,
+            age, currentLevel, position,
+            yesNo(goalie), yesNo(spareOnly),
+            notes
+          ]];
+          await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: `${sheet}!A1`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: rows },
+          });
+        } catch (e) {
+          console.warn('Sheets API append failed:', (e as any)?.message || e);
+          // Optional: return 502 if append must succeed
+        }
       }
     } else {
       const sheetEndpoint = process.env.SHEET_ENDPOINT;
-      if (sheetEndpoint) {
+      if (!sheetEndpoint) {
+        console.warn('Join append skipped: no SHEET_ENDPOINT and USE_GOOGLE_SHEETS_API is not true');
+      } else {
         const rowPayload = {
-          submittedAt,
-          name, email, phone,
-          phoneDisplay: data.phoneDisplay ?? '',
-          age, currentLevel, position,
-          goalie, spareOnly, notes, message
+          submittedAt, name, email, phone, phoneDisplay,
+          age, currentLevel, position, goalie, spareOnly, notes, message,
         };
-
-        // one try w/ brief retry
         let ok = false;
         for (let attempt = 1; attempt <= 2; attempt++) {
           try {
             const res = await postWithTimeout(sheetEndpoint, rowPayload, 8000);
             if (res.ok) { ok = true; break; }
             const txt = await res.text().catch(() => '');
-            console.warn(`Sheets append attempt ${attempt} failed:`, txt || res.status);
+            console.warn(`SHEET_ENDPOINT append attempt ${attempt} failed:`, txt || res.status);
           } catch (err) {
-            console.warn(`Sheets append attempt ${attempt} error:`, (err as any)?.message || err);
+            console.warn(`SHEET_ENDPOINT append attempt ${attempt} error:`, (err as any)?.message || err);
           }
           await new Promise(r => setTimeout(r, 400 + Math.random() * 600));
         }
-        if (!ok) {
-          // keep user success;
-          console.warn('Sheets append ultimately failed');
-        }
+        if (!ok) console.warn('SHEET_ENDPOINT append ultimately failed');
       }
     }
 
